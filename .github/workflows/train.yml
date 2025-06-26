@@ -29,15 +29,16 @@ jobs:
         working-directory: MLProject
         run: mlflow run . --env-manager=local
 
-      - name: Get latest MLflow run_id
+      - name: Get latest MLflow run_id (from inside MLProject/mlruns)
         id: get_run_id
+        working-directory: MLProject
         run: |
           echo "run_id=$(ls -t mlruns/0 | head -n 1)" >> $GITHUB_OUTPUT
-
+      
       - name: Upload model to GitHub (copy to upload_model/)
         run: |
           mkdir -p upload_model
-          cp -r mlruns/0/${{ steps.get_run_id.outputs.run_id }}/artifacts/model upload_model/
+          cp -r MLProject/mlruns/0/${{ steps.get_run_id.outputs.run_id }}/artifacts/model upload_model/
 
       - name: Commit and push model folder
         run: |
@@ -49,10 +50,17 @@ jobs:
 
       - name: Build MLflow Docker image
         run: |
-          mlflow models build-docker -m mlruns/0/${{ steps.get_run_id.outputs.run_id }}/artifacts/model -n harga-properti-model
+          mlflow models build-docker -m MLProject/mlruns/0/${{ steps.get_run_id.outputs.run_id }}/artifacts/model -n harga-properti-model
+
 
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Docker image to Docker Hub
         run: docker tag harga-properti-model ${{ secrets.DOCKER_USERNAME }}/harga-properti-model:latest && docker push ${{ secrets.DOCKER_USERNAME }}/harga-properti-model:latest
+
+      - name: Upload model to GitHub Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-model
+          path: upload_model/
