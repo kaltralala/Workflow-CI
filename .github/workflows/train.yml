@@ -22,13 +22,11 @@ jobs:
         activate-environment: harga-properti-env
         python-version: 3.12.7
 
-    - name: Install mlflow
+    - name: Install MLflow
       run: |
-        conda activate harga-properti-env
         pip install mlflow==2.19.0
 
     - name: Run MLflow Project
       working-directory: MLProject
       run: |
-        conda activate harga-properti-env
         mlflow run . --no-conda
