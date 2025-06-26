@@ -5,12 +5,13 @@ import mlflow.sklearn
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 import os
+import joblib
 
-# Aktifkan autolog (cukup, tidak perlu set_experiment dan tracking_uri di MLProject)
+# Aktifkan autolog
 mlflow.sklearn.autolog()
 
 def run_model():
-    # Load dataset hasil preprocessing (harus relatif path)
+    # Load dataset hasil preprocessing
     df = pd.read_csv("rumah_jakarta_preprocessing.csv")
 
     # Fitur dan target
@@ -22,16 +23,19 @@ def run_model():
         X, y, test_size=0.2, random_state=42
     )
 
-    # Mulai MLflow run
     with mlflow.start_run(run_name="RandomForest_Baseline_AutoLog"):
-        # Logging dataset eksplisit (opsional)
+        # Log dataset eksplisit ke MLflow (opsional)
         mlflow.log_artifact("rumah_jakarta_preprocessing.csv", artifact_path="dataset")
 
         # Train model
         model = RandomForestRegressor(random_state=42)
         model.fit(X_train, y_train)
 
-        print("Model trained and autologged successfully.")
+        # Simpan model ke folder upload_model agar bisa di-upload di CI
+        os.makedirs("upload_model", exist_ok=True)
+        joblib.dump(model, "upload_model/random_forest_model.pkl")
+
+        print("Model trained, autologged, and saved to 'upload_model/'.")
 
 if __name__ == "__main__":
     run_model()
