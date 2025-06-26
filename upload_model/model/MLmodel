@@ -1,0 +1,70 @@
+artifact_path: model
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.0
+mlflow_version: 2.19.0
+model_size_bytes: 13195177
+model_uuid: 03f661e2d5ea4fe6b3140250cb944852
+run_id: 4881032725544e208a067945ba08eeff
+signature:
+  inputs: '[{"type": "double", "name": "parkir", "required": true}, {"type": "double",
+    "name": "kamar", "required": true}, {"type": "double", "name": "kamar_mandi",
+    "required": true}, {"type": "double", "name": "luas_bangunan", "required": true},
+    {"type": "double", "name": "luas_lahan", "required": true}, {"type": "double",
+    "name": "price_per_m2", "required": true}, {"type": "double", "name": "log_price_per_m2",
+    "required": true}, {"type": "double", "name": "Kitchen set_yes", "required": true},
+    {"type": "double", "name": "Taman_yes", "required": true}, {"type": "double",
+    "name": "Halaman terbuka_yes", "required": true}, {"type": "double", "name": "Pagar
+    penuh_yes", "required": true}, {"type": "double", "name": "Garasi_yes", "required":
+    true}, {"type": "double", "name": "Keamanan 24 jam_yes", "required": true}, {"type":
+    "double", "name": "kota_Jakarta Pusat", "required": true}, {"type": "double",
+    "name": "kota_Jakarta Selatan", "required": true}, {"type": "double", "name":
+    "kota_Jakarta Timur", "required": true}, {"type": "double", "name": "kota_Jakarta
+    Utara", "required": true}, {"type": "double", "name": "kecamatan_Cempakaputih",
+    "required": true}, {"type": "double", "name": "kecamatan_Cengkareng", "required":
+    true}, {"type": "double", "name": "kecamatan_Cilandak", "required": true}, {"type":
+    "double", "name": "kecamatan_Cilincing", "required": true}, {"type": "double",
+    "name": "kecamatan_Cipayung", "required": true}, {"type": "double", "name": "kecamatan_Ciracas",
+    "required": true}, {"type": "double", "name": "kecamatan_Durensawit", "required":
+    true}, {"type": "double", "name": "kecamatan_Gambir", "required": true}, {"type":
+    "double", "name": "kecamatan_Grogolpetamburan", "required": true}, {"type": "double",
+    "name": "kecamatan_Jagakarsa", "required": true}, {"type": "double", "name": "kecamatan_Jatinegara",
+    "required": true}, {"type": "double", "name": "kecamatan_Joharbaru", "required":
+    true}, {"type": "double", "name": "kecamatan_Kalideres", "required": true}, {"type":
+    "double", "name": "kecamatan_Kebayoranbaru", "required": true}, {"type": "double",
+    "name": "kecamatan_Kebayoranlama", "required": true}, {"type": "double", "name":
+    "kecamatan_Kebonjeruk", "required": true}, {"type": "double", "name": "kecamatan_Kelapagading",
+    "required": true}, {"type": "double", "name": "kecamatan_Kemayoran", "required":
+    true}, {"type": "double", "name": "kecamatan_Kembangan", "required": true}, {"type":
+    "double", "name": "kecamatan_Koja", "required": true}, {"type": "double", "name":
+    "kecamatan_Kramatjati", "required": true}, {"type": "double", "name": "kecamatan_Makasar",
+    "required": true}, {"type": "double", "name": "kecamatan_Mampangprapatan", "required":
+    true}, {"type": "double", "name": "kecamatan_Matraman", "required": true}, {"type":
+    "double", "name": "kecamatan_Menteng", "required": true}, {"type": "double", "name":
+    "kecamatan_Pademangan", "required": true}, {"type": "double", "name": "kecamatan_Palmerah",
+    "required": true}, {"type": "double", "name": "kecamatan_Pancoran", "required":
+    true}, {"type": "double", "name": "kecamatan_Pasarminggu", "required": true},
+    {"type": "double", "name": "kecamatan_Pasarrebo", "required": true}, {"type":
+    "double", "name": "kecamatan_Penjaringan", "required": true}, {"type": "double",
+    "name": "kecamatan_Pesanggrahan", "required": true}, {"type": "double", "name":
+    "kecamatan_Pulogadung", "required": true}, {"type": "double", "name": "kecamatan_Sawahbesar",
+    "required": true}, {"type": "double", "name": "kecamatan_Senen", "required": true},
+    {"type": "double", "name": "kecamatan_Setiabudi", "required": true}, {"type":
+    "double", "name": "kecamatan_Tamansari", "required": true}, {"type": "double",
+    "name": "kecamatan_Tambora", "required": true}, {"type": "double", "name": "kecamatan_Tanahabang",
+    "required": true}, {"type": "double", "name": "kecamatan_Tanjungpriok", "required":
+    true}, {"type": "double", "name": "kecamatan_Tebet", "required": true}]'
+  outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
+  params: null
+utc_time_created: '2025-06-26 10:30:27.200742'
