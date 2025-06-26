@@ -1,0 +1,12 @@
+name: harga-properti-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12.7
+  - pip
+  - scikit-learn
+  - pandas
+  - numpy
+  - pip:
+      - mlflow==2.19.0
