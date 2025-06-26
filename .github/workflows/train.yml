@@ -60,7 +60,7 @@ jobs:
         run: docker tag harga-properti-model ${{ secrets.DOCKER_USERNAME }}/harga-properti-model:latest && docker push ${{ secrets.DOCKER_USERNAME }}/harga-properti-model:latest
 
       - name: Upload model to GitHub Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trained-model
           path: upload_model/
