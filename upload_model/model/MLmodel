@@ -15,8 +15,8 @@ flavors:
     sklearn_version: 1.7.0
 mlflow_version: 2.19.0
 model_size_bytes: 13195177
-model_uuid: 03f661e2d5ea4fe6b3140250cb944852
-run_id: 4881032725544e208a067945ba08eeff
+model_uuid: ebecc6d2dbcb4d6e877e4a9db9e0853a
+run_id: 03e46d1087c24dfe8706f369ce0360cb
 signature:
   inputs: '[{"type": "double", "name": "parkir", "required": true}, {"type": "double",
     "name": "kamar", "required": true}, {"type": "double", "name": "kamar_mandi",
@@ -67,4 +67,4 @@ signature:
     true}, {"type": "double", "name": "kecamatan_Tebet", "required": true}]'
   outputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1]}}]'
   params: null
-utc_time_created: '2025-06-26 10:30:27.200742'
+utc_time_created: '2025-06-26 10:46:59.419542'
