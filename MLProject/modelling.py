@@ -1,77 +1,102 @@
-# 1. BLOK IMPOR PUSTAKA
+# BLOK IMPOR PUSTAKA
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import mlflow
 import mlflow.sklearn
 import os
+import dagshub
+import matplotlib.pyplot as plt
+import seaborn as sns
 import argparse
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score, roc_auc_score,
+    confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, auc
+)
 
-# 2. FUNGSI-FUNGSI PEMBANTU
+# FUNGSI PEMBANTU
 def load_data(path):
-    """Fungsi untuk memuat data dari path CSV."""
     return pd.read_csv(path)
 
-# 3. FUNGSI UTAMA PELATIHAN MODEL
-def train_model(data_path):
-    """
-    Fungsi ini HANYA fokus pada logika inti: load data, train model,
-    dan melaporkan hasilnya ke run MLflow yang SUDAH AKTIF.
-    """
+# FUNGSI UTAMA
+def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_path, test_label_path):
+    # Inisialisasi koneksi ke DagsHub
+    print("Menginisialisasi koneksi ke DagsHub...")
+    dagshub.init(repo_owner='kaltralala', repo_name='Eksperimen_SML_HMR', mlflow=True)
+    mlflow.set_experiment("Fraud Detection - Champion Model")
+    print("Koneksi ke DagsHub berhasil.")
 
-    # Memuat Data
-    print(f"Memuat data dari: {data_path}")
-    X_train = load_data(os.path.join(data_path, 'train_features.csv'))
-    y_train = load_data(os.path.join(data_path, 'train_labels.csv')).values.ravel()
-    X_test = load_data(os.path.join(data_path, 'test_features.csv'))
-    y_test = load_data(os.path.join(data_path, 'test_labels.csv')).values.ravel()
-    
-    # Inisialisasi dan Pelatihan Model
-    print("Memulai pelatihan model RandomForest...")
-    params = {
-        'n_estimators': 100,
-        'class_weight': 'balanced',
-        'random_state': 42,
-        'n_jobs': -1
-    }
-    model = RandomForestClassifier(**params)
-    model.fit(X_train, y_train)
-    print("Model selesai dilatih.")
+    # Memuat data
+    print("Memuat data...")
+    X_train = load_data(train_feat_path)
+    y_train = load_data(train_label_path).values.ravel()
+    X_test = load_data(test_feat_path)
+    y_test = load_data(test_label_path).values.ravel()
 
-    # Evaluasi Model pada Data Uji
-    print("Evaluasi model pada data uji...")
-    y_pred_test = model.predict(X_test)
+    # Mulai tracking eksperimen
+    with mlflow.start_run(run_name="RandomForest_Champion_FinalReport"):
+        print("Melatih model RandomForest...")
 
-    # MANUAL LOGGING (Akan otomatis log ke run yang aktif)
-    print("Mencatat parameter, metrik, dan artefak ke MLflow...")
-    
-    mlflow.log_params(params)
-    mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred_test))
-    mlflow.log_metric("test_precision", precision_score(y_test, y_pred_test))
-    mlflow.log_metric("test_recall", recall_score(y_test, y_pred_test))
-    mlflow.log_metric("test_f1_score", f1_score(y_test, y_pred_test))
-    
-    # Membuat dan menyimpan Confusion Matrix
-    fig, ax = plt.subplots()
-    cm = confusion_matrix(y_test, y_pred_test, labels=model.classes_)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
-    disp.plot(ax=ax, cmap=plt.cm.Blues, colorbar=False)
-    ax.set_title("Confusion Matrix (Test Data)")
-    mlflow.log_figure(fig, "visuals/confusion_matrix.png")
-    plt.close(fig)
-    print("Artefak Confusion Matrix dicatat.")
-    
-    # Log Model itu sendiri
-    mlflow.sklearn.log_model(model, "model")
-    print("Model dicatat sebagai artefak.")
-    print("Logging selesai.")
+        params = {
+            'n_estimators': 100,
+            'class_weight': 'balanced',
+            'random_state': 42,
+            'n_jobs': -1
+        }
+        model = RandomForestClassifier(**params)
+        model.fit(X_train, y_train)
 
-# 4. BLOK EKSEKUSI UTAMA
+        print("Evaluasi model...")
+        y_pred_test = model.predict(X_test)
+        y_pred_proba_test = model.predict_proba(X_test)[:, 1]
+
+        # Logging parameter dan metrik
+        mlflow.log_params(params)
+        mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred_test))
+        mlflow.log_metric("test_precision", precision_score(y_test, y_pred_test))
+        mlflow.log_metric("test_recall", recall_score(y_test, y_pred_test))
+        mlflow.log_metric("test_f1_score", f1_score(y_test, y_pred_test))
+        mlflow.log_metric("test_roc_auc", roc_auc_score(y_test, y_pred_proba_test))
+
+        # Confusion Matrix
+        fig_cm, ax_cm = plt.subplots()
+        cm = confusion_matrix(y_test, y_pred_test, labels=model.classes_)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+        disp.plot(ax=ax_cm, cmap=plt.cm.Blues, colorbar=False)
+        ax_cm.set_title("Confusion Matrix")
+        mlflow.log_figure(fig_cm, "visuals/confusion_matrix.png")
+
+        # Precision-Recall Curve
+        fig_pr, ax_pr = plt.subplots()
+        precision, recall, _ = precision_recall_curve(y_test, y_pred_proba_test)
+        pr_auc = auc(recall, precision)
+        ax_pr.plot(recall, precision, label=f'PR AUC = {pr_auc:.4f}')
+        ax_pr.set_title("Precision-Recall Curve")
+        ax_pr.set_xlabel("Recall")
+        ax_pr.set_ylabel("Precision")
+        ax_pr.legend()
+        mlflow.log_figure(fig_pr, "visuals/precision_recall_curve.png")
+
+        # Simpan dan log model
+        local_model_path = "champion_rf_model_local"
+        mlflow.sklearn.save_model(sk_model=model, path=local_model_path)
+        mlflow.sklearn.log_model(sk_model=model, artifact_path="model")
+
+        print("\n" + "="*60)
+        print("Run selesai! Artefak & metrik telah dicatat ke DagsHub.")
+        print("="*60)
+
+# EKSEKUSI UTAMA
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", type=str, required=True)
+    parser.add_argument("--train_features", type=str, required=True)
+    parser.add_argument("--train_labels", type=str, required=True)
+    parser.add_argument("--test_features", type=str, required=True)
+    parser.add_argument("--test_labels", type=str, required=True)
     args = parser.parse_args()
-    train_model(args.data_path)
+
+    train_advanced_champion_model(
+        args.train_features,
+        args.train_labels,
+        args.test_features,
+        args.test_labels
+    )

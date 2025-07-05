@@ -5,5 +5,13 @@ conda_env: conda.yaml
 entry_points:
   main:
     parameters:
-      data_path: {type: str, default: "hasil_preprocessing/"}
-    command: "python modelling.py --data_path {data_path}"
+      train_features: {type: str, default: "hasil_preprocessing/train_features.csv"}
+      train_labels: {type: str, default: "hasil_preprocessing/train_labels.csv"}
+      test_features: {type: str, default: "hasil_preprocessing/test_features.csv"}
+      test_labels: {type: str, default: "hasil_preprocessing/test_labels.csv"}
+    command: >
+      python modelling.py
+        --train_features {train_features}
+        --train_labels {train_labels}
+        --test_features {test_features}
+        --test_labels {test_labels}

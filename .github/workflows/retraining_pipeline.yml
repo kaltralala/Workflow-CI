@@ -12,7 +12,6 @@ jobs:
     permissions:
       contents: write
 
-    # Mengatur env var untuk seluruh job, lebih bersih
     env:
       MLFLOW_CONDA_HOME: /usr/share/miniconda
 
@@ -30,51 +29,43 @@ jobs:
         with:
           auto-update-conda: true
           python-version: 3.12
+          environment-file: MLProject/conda.yaml
+          activate-environment: fraud_detection_env
 
-      - name: 4. Install Dependencies
-        shell: bash -l {0}
-        run: pip install mlflow scikit-learn pandas
-
-      - name: 5. Run MLflow Project and Get Run ID
-        id: training_run # Beri ID agar outputnya bisa diambil
+      - name: 4. Run MLflow Project and Get Run ID
+        id: training_run
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          # Jalankan training dan simpan output log-nya ke sebuah file
+          echo "Running MLflow training..."
           mlflow run . --experiment-name "Automated CI Training" | tee run_output.txt
-          
-          # Ekstrak Run ID dari log dan set sebagai environment variable untuk langkah selanjutnya
           LATEST_RUN_ID=$(cat run_output.txt | grep "run with ID" | awk '{print $NF}' | tr -d "'")
-          echo "Discovered MLflow Run ID: $LATEST_RUN_ID"
           echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
 
-      - name: 6. Commit MLflow Artifacts to Repo (Skilled Criteria)
+      - name: 5. Commit MLflow Artifacts to Repo (Skilled Criteria)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "ci: Update mlruns artifacts after training"
           file_pattern: 'MLProject/mlruns/'
 
-      - name: 7. Log in to Docker Hub
+      - name: 6. Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 8. Build and Push Docker Image (Advanced Criteria)
-        # Bekerja dari direktori yang sama dengan training untuk konsistensi path
+      - name: 7. Build and Push Docker Image (Advanced Criteria)
         working-directory: ./MLProject
         shell: bash -l {0}
         run: |
-          # Siapkan nama image yang akan dibuat
           IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
           echo "Building Docker image: $IMAGE_NAME"
-          
-          # Perintah build-docker dalam satu baris yang benar
-          # Kita gunakan backslash (\) untuk memecah perintah panjang agar mudah dibaca
           mlflow models build-docker \
             --model-uri "runs:/${{ env.RUN_ID }}/model" \
             --name "$IMAGE_NAME"
-
-          # Push image yang baru dibuat ke Docker Hub
-          echo "Pushing Docker image to Docker Hub..."
+          echo "Pushing Docker image..."
           docker push "$IMAGE_NAME"
+
+      - name: 8. Optional: Confirm Docker Push
+        run: |
+          echo "Image pushed to Docker Hub: ${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
