@@ -1,4 +1,7 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import confusion_matrix
 import mlflow
 import mlflow.sklearn
 import os
@@ -51,6 +54,23 @@ def train_model(data_path):
 
         # Simpan model ke MLflow
         mlflow.sklearn.log_model(model, "model")
+
+        # Hitung confusion matrix
+        cm = confusion_matrix(y_test, y_pred_test)
+
+        # Plot confusion matrix
+        plt.figure(figsize=(6, 5))
+        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+        plt.xlabel("Predicted")
+        plt.ylabel("Actual")
+        plt.title("Confusion Matrix (Test Data)")
+
+        # Simpan dan log gambar ke MLflow
+        conf_matrix_path = "training_confusion_matrix.png"
+        plt.savefig(conf_matrix_path)
+        mlflow.log_artifact(conf_matrix_path)
+        plt.close()
+
         print("Logging selesai.")
 
 if __name__ == "__main__":
