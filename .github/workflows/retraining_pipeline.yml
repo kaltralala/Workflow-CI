@@ -53,13 +53,18 @@ jobs:
         working-directory: ./MLProject
         run: |
           EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
-          RUN_ID=$(mlflow runs list --experiment-id $EXP_ID --order-by start_time desc | awk 'NR==2 {print $1}')
-            
+          echo "Found EXP_ID: $EXP_ID"
+
+          RUN_LIST=$(mlflow runs list --experiment-id "$EXP_ID")
+          echo "$RUN_LIST"
+
+          RUN_ID=$(echo "$RUN_LIST" | tail -n +2 | head -n 1 | awk '{print $1}')
+
           if [[ -z "$RUN_ID" || "$RUN_ID" == "Date" ]]; then
             echo "Error: Invalid RUN_ID: $RUN_ID"
             exit 1
           fi
-        
+
           echo "Discovered Run ID: $RUN_ID"
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
