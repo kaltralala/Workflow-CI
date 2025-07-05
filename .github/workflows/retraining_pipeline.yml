@@ -10,9 +10,8 @@ jobs:
   train-build-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Izin untuk melakukan commit kembali ke repo
+      contents: write # Izin untuk commit perubahan artefak ke repo
 
-    # Mengatur environment variable untuk seluruh job agar lebih bersih
     env:
       MLFLOW_CONDA_HOME: /usr/share/miniconda
 
@@ -33,45 +32,46 @@ jobs:
           auto-update-conda: true
           python-version: 3.12
 
-      - name: 4. Install Dependencies
+      - name: 4. Install Python Dependencies
         shell: bash -l {0}
-        run: pip install mlflow scikit-learn pandas jq
+        run: |
+          pip install mlflow==2.19.0 scikit-learn pandas seaborn matplotlib jq
 
-      - name: 5. Run MLflow Project to Train Model
-        id: training # Beri ID pada langkah ini
+      - name: 5. Clean up old mlruns (optional)
+        run: rm -rf ./MLProject/mlruns
+
+      - name: 6. Run MLflow Project (Training)
+        id: training
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          # Jalankan mlflow dan tangkap outputnya
           mlflow run . --experiment-name "Automated CI Training" | tee run_output.txt
-      
-      - name: 6. Get Latest MLflow Run ID
+
+      - name: 7. Extract Latest MLflow Run ID
         id: get_run_id
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          # Ekstrak Run ID dari output dan set sebagai environment variable
-          # Ini adalah cara yang sangat kokoh untuk mendapatkan ID dari run yang baru saja dibuat
-          LATEST_RUN_ID=$(cat run_output.txt | grep "run with ID" | awk '{print $NF}' | tr -d "'")
-          echo "Discovered MLflow Run ID: $LATEST_RUN_ID"
+          LATEST_RUN_ID=$(grep -oE "run with ID '[a-f0-9\-]+'" run_output.txt | awk '{print $NF}' | tr -d "'")
           echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
+          echo "Extracted Run ID: $LATEST_RUN_ID"
 
-      - name: 7. Commit MLflow Artifacts to Repo (Skilled Criteria)
+      - name: 8. Commit MLflow Artifacts to Repo
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "ci: Update mlruns artifacts after automated training"
+          commit_message: "ci: Update mlruns artifacts after training"
           file_pattern: 'MLProject/mlruns/'
-          
-      - name: 8. Log in to Docker Hub
+
+      - name: 9. Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 9. Build and Push Docker Image (Advanced Criteria)
+      - name: 10. Build & Push Docker Image
+        shell: bash -l {0}
         run: |
           IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
           echo "Building Docker image: $IMAGE_NAME"
           mlflow models build-docker --model-uri "runs:/${{ env.RUN_ID }}/model" --name "$IMAGE_NAME"
-          echo "Pushing Docker image to Docker Hub..."
           docker push "$IMAGE_NAME"
