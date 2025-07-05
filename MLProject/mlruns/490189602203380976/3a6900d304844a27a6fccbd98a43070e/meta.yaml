@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/490189602203380976/3a6900d304844a27a6fccbd98a43070e/artifacts
+end_time: 1751721411446
+entry_point_name: ''
+experiment_id: '490189602203380976'
+lifecycle_stage: active
+run_id: 3a6900d304844a27a6fccbd98a43070e
+run_name: charming-goose-329
+run_uuid: 3a6900d304844a27a6fccbd98a43070e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751721314224
+status: 3
+tags: []
+user_id: runner
