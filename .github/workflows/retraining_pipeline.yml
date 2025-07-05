@@ -21,27 +21,30 @@ jobs:
           git lfs install
           git lfs pull
 
-      - name: Set up Python 3.12.7
-        uses: actions/setup-python@v5
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: '3.12.7'
+          python-version: 3.12.7
+          auto-update-conda: true
+          activate-environment: base
 
       - name: Check Env
+        shell: bash -l {0}
         run: |
           which python
           python --version
+          conda --version
 
-      - name: Install dependencies
+      - name: Install MLflow
+        shell: bash -l {0}
         run: pip install mlflow==2.19.0
 
-      - name: Set MLflow Tracking URI (optional)
-        run: |
-          export MLFLOW_TRACKING_URI=file:./mlruns
-        shell: bash
-
       - name: Run mlflow project
+        shell: bash -l {0}
         working-directory: ./MLProject
-        run: mlflow run .
+        run: |
+          export MLFLOW_CONDA_HOME=$CONDA/bin
+          mlflow run .
 
       - name: Upload trained model to GitHub
         uses: actions/upload-artifact@v4
