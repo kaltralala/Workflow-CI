@@ -4,52 +4,57 @@ import mlflow.sklearn
 import os
 import argparse
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import f1_score, precision_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 def load_data(path):
-    """Fungsi untuk memuat data dari path CSV."""
+    """Memuat data dari file CSV."""
     return pd.read_csv(path)
 
 def train_model(data_path):
-    """
-    Fungsi ini fokus pada load data, training model,
-    dan logging manual metrik tambahan selain autolog.
-    """
+    """Melatih model RandomForest dan mencatat hasilnya secara manual ke MLflow."""
+    
+    mlflow.set_experiment("Automated CI Training")
 
-    # Autolog aktif (akan log param & model secara otomatis)
-    mlflow.sklearn.autolog()
-
-    # --- Memuat Data ---
-    print(f"Memuat data dari: {data_path}")
+    print("Memuat data dari:", data_path)
     X_train = load_data(os.path.join(data_path, 'train_features.csv'))
-    y_train = load_data(os.path.join(data_path, 'train_labels.csv'))
+    y_train = load_data(os.path.join(data_path, 'train_labels.csv')).values.ravel()
+    X_test = load_data(os.path.join(data_path, 'test_features.csv'))
+    y_test = load_data(os.path.join(data_path, 'test_labels.csv')).values.ravel()
+    
+    with mlflow.start_run(run_name="Automated_RF_ManualLog"):
+        
+        # Inisialisasi dan latih model
+        print("Melatih model RandomForest...")
+        params = {
+            'n_estimators': 100,
+            'class_weight': 'balanced',
+            'random_state': 42,
+            'n_jobs': -1
+        }
+        model = RandomForestClassifier(**params)
+        model.fit(X_train, y_train)
+        print("Model selesai dilatih.")
 
-    # --- Inisialisasi & Pelatihan Model ---
-    print("Memulai pelatihan model RandomForest...")
-    model = RandomForestClassifier(
-        n_estimators=100,
-        class_weight='balanced',
-        random_state=42,
-        n_jobs=-1
-    )
-    model.fit(X_train, y_train.values.ravel())
-    print("Pelatihan model selesai.")
+        # Evaluasi model
+        print("Evaluasi model pada data uji...")
+        y_pred_test = model.predict(X_test)
+        y_pred_proba_test = model.predict_proba(X_test)[:, 1]
 
-    # --- Metrik tambahan (manual logging) ---
-    y_pred = model.predict(X_train)
-    f1 = f1_score(y_train, y_pred, average='macro')
-    precision = precision_score(y_train, y_pred, average='macro')
+        # Logging manual ke MLflow
+        print("Logging parameter dan metrik ke MLflow...")
+        mlflow.log_params(params)
+        mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred_test))
+        mlflow.log_metric("test_precision", precision_score(y_test, y_pred_test))
+        mlflow.log_metric("test_recall", recall_score(y_test, y_pred_test))
+        mlflow.log_metric("test_f1_score", f1_score(y_test, y_pred_test))
+        mlflow.log_metric("test_roc_auc", roc_auc_score(y_test, y_pred_proba_test))
 
-    # Manual logging ke MLflow
-    mlflow.log_metric("custom_f1_score_macro", f1)
-    mlflow.log_metric("custom_precision_macro", precision)
+        # Simpan model ke MLflow
+        mlflow.sklearn.log_model(model, "model")
+        print("Logging selesai.")
 
-    print("Metrik tambahan berhasil dilog ke MLflow.")
-
-# Eksekusi utama
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", type=str, required=True)
     args = parser.parse_args()
-
     train_model(args.data_path)
