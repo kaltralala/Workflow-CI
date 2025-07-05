@@ -1,11 +1,11 @@
 name: fraud_detection_env
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
-  - python=3.12.7
+  - python=3.12
   - pip
   - pip:
-    - mlflow==2.19.0
-    - scikit-learn
-    - pandas
+      - mlflow==2.19.0
+      - scikit-learn==1.4.2
+      - pandas
