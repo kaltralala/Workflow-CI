@@ -1,4 +1,4 @@
-name: Basic CI Model Retraining
+name: CI Model Retraining and Docker Deployment
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  train-model-basic:
+  train-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +27,7 @@ jobs:
           python-version: 3.12
           auto-update-conda: true
 
-      - name: Check Env
+      - name: Check Environment
         shell: bash -l {0}
         run: |
           which python
@@ -45,11 +45,23 @@ jobs:
           export MLFLOW_CONDA_HOME=/usr/share/miniconda
           mlflow run . --experiment-name "Automated CI Training"
 
-      - name: List mlruns output
+      - name: List mlruns Output
         run: ls -R ./MLProject/mlruns
-          
-      - name: Upload trained model to GitHub
+
+      - name: Upload Trained Model Artifacts to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-runs-artifact
           path: ./MLProject/mlruns/
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image to Docker Hub
+        working-directory: ./MLProject
+        run: |
+          export MLFLOW_CONDA_HOME=/usr/share/miniconda
+          RUN_ID=$(ls -td mlruns/0/* | head -n 1 | xargs -n1 basename)
+          echo "Using MLflow run ID: $RUN_ID"
+          mlflow models build-docker -m mlruns/0/$RUN_ID/artifacts/model -n ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
