@@ -8,29 +8,18 @@ on:
 
 jobs:
   train-model-basic:
-    # Menentukan mesin virtual yang akan digunakan
     runs-on: ubuntu-latest
 
-    # Mendefinisikan urutan langkah-langkah
     steps:
-      # Langkah 1: Mengambil kode dari repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Langkah 2: Menyiapkan lingkungan Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: '3.12.7'
+          auto-update-conda: true
+          python-version: 3.12
 
-      # Langkah 3: Menginstal library yang dibutuhkan
-      - name: Install Dependencies
-        run: pip install mlflow scikit-learn pandas
-
-      # Langkah 4: Menjalankan MLflow Project
-      # Ini adalah perintah inti yang akan melatih model Anda
       - name: Run MLflow Project
-        # 'working-directory' memastikan perintah dijalankan dari dalam folder MLProject
         working-directory: ./MLProject
-        shell: bash -l {0}
-        run: mlflow run . --no-conda
+        run: mlflow run .
