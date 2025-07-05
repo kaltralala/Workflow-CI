@@ -41,7 +41,7 @@ jobs:
       - name: Run MLflow Project to Train Model
         working-directory: ./MLProject
         shell: bash -l {0}
-        run: 
+        run: |
           export MLFLOW_CONDA_HOME=/usr/share/miniconda
           mlflow run . --experiment-name "Automated CI Training"
 
