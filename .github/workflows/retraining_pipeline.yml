@@ -10,7 +10,7 @@ jobs:
   train-build-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Izin untuk commit perubahan artefak ke repo
+      contents: write
 
     env:
       MLFLOW_CONDA_HOME: /usr/share/miniconda
@@ -35,7 +35,7 @@ jobs:
       - name: 4. Install Python Dependencies
         shell: bash -l {0}
         run: |
-          pip install mlflow==2.19.0 scikit-learn pandas seaborn matplotlib jq
+          pip install mlflow==2.19.0 scikit-learn pandas seaborn matplotlib
 
       - name: 5. Clean up old mlruns (optional)
         run: rm -rf ./MLProject/mlruns
@@ -45,16 +45,17 @@ jobs:
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          mlflow run . --experiment-name "Automated CI Training" | tee run_output.txt
+          mlflow run . --experiment-name "Automated CI Training"
 
-      - name: 7. Extract Latest MLflow Run ID
+      - name: 7. Extract Latest MLflow Run ID using MLflow CLI
         id: get_run_id
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          LATEST_RUN_ID=$(grep -oE "run with ID '[a-f0-9\-]+'" run_output.txt | awk '{print $NF}' | tr -d "'")
-          echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
-          echo "Extracted Run ID: $LATEST_RUN_ID"
+          EXP_ID=$(mlflow experiments list | grep "Automated CI Training" | awk '{print $1}')
+          RUN_ID=$(mlflow runs list -e $EXP_ID --order-by start_time desc | awk 'NR==2{print $1}')
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Discovered Run ID: $RUN_ID"
 
       - name: 8. Commit MLflow Artifacts to Repo
         uses: stefanzweifel/git-auto-commit-action@v5
