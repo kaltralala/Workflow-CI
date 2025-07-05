@@ -1,4 +1,4 @@
-name: CI Model Retraining and Docker Deployment
+name: Advanced CI, Training, and Docker Deployment
 
 on:
   push:
@@ -7,61 +7,71 @@ on:
   workflow_dispatch:
 
 jobs:
-  train-and-deploy:
+  train-build-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Izin untuk melakukan commit kembali ke repo
+
+    # Mengatur environment variable untuk seluruh job agar lebih bersih
+    env:
+      MLFLOW_CONDA_HOME: /usr/share/miniconda
 
     steps:
-      - name: Checkout Repository (with Git LFS)
+      - name: 1. Checkout Repository (with Git LFS)
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Set up Git LFS
+      - name: 2. Set up Git LFS
         run: |
           git lfs install
           git lfs pull
 
-      - name: Set up Miniconda
+      - name: 3. Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: 3.12
           auto-update-conda: true
+          python-version: 3.12
 
-      - name: Check Environment
+      - name: 4. Install Dependencies
         shell: bash -l {0}
-        run: |
-          which python
-          python --version
-          conda --version
+        run: pip install mlflow scikit-learn pandas jq
 
-      - name: Install MLflow
+      - name: 5. Run MLflow Project to Train Model
+        id: training # Beri ID pada langkah ini
         shell: bash -l {0}
-        run: pip install mlflow==2.19.0
-
-      - name: Run MLflow Project to Train Model
         working-directory: ./MLProject
-        shell: bash -l {0}
         run: |
-          export MLFLOW_CONDA_HOME=/usr/share/miniconda
-          mlflow run . --experiment-name "Automated CI Training"
+          # Jalankan mlflow dan tangkap outputnya
+          mlflow run . --experiment-name "Automated CI Training" | tee run_output.txt
+      
+      - name: 6. Get Latest MLflow Run ID
+        id: get_run_id
+        shell: bash -l {0}
+        working-directory: ./MLProject
+        run: |
+          # Ekstrak Run ID dari output dan set sebagai environment variable
+          # Ini adalah cara yang sangat kokoh untuk mendapatkan ID dari run yang baru saja dibuat
+          LATEST_RUN_ID=$(cat run_output.txt | grep "run with ID" | awk '{print $NF}' | tr -d "'")
+          echo "Discovered MLflow Run ID: $LATEST_RUN_ID"
+          echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
 
-      - name: List mlruns Output
-        run: ls -R ./MLProject/mlruns
-
-      - name: Upload Trained Model Artifacts to GitHub
-        uses: actions/upload-artifact@v4
+      - name: 7. Commit MLflow Artifacts to Repo (Skilled Criteria)
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          name: mlflow-runs-artifact
-          path: ./MLProject/mlruns/
+          commit_message: "ci: Update mlruns artifacts after automated training"
+          file_pattern: 'MLProject/mlruns/'
+          
+      - name: 8. Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Build and Push Docker Image to Docker Hub
-        working-directory: ./MLProject
+      - name: 9. Build and Push Docker Image (Advanced Criteria)
         run: |
-          export MLFLOW_CONDA_HOME=/usr/share/miniconda
-          RUN_ID=$(ls -td mlruns/0/* | head -n 1 | xargs -n1 basename)
-          echo "Using MLflow run ID: $RUN_ID"
-          mlflow models build-docker -m mlruns/0/$RUN_ID/artifacts/model -n ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/mlflow-model:latest
+          IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
+          echo "Building Docker image: $IMAGE_NAME"
+          mlflow models build-docker --model-uri "runs:/${{ env.RUN_ID }}/model" --name "$IMAGE_NAME"
+          echo "Pushing Docker image to Docker Hub..."
+          docker push "$IMAGE_NAME"
