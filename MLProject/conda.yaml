@@ -5,7 +5,9 @@ channels:
 dependencies:
   - python=3.12
   - pip
+  - pandas
+  - scikit-learn==1.4.2
+  - matplotlib
+  - seaborn
   - pip:
       - mlflow==2.19.0
-      - scikit-learn==1.4.2
-      - pandas
