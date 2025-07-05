@@ -53,18 +53,18 @@ jobs:
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
+          EXP_ID=$(mlflow experiments search --output json | jq -r '.[] | select(.name == "Automated CI Training") | .experiment_id')
           echo "EXP_ID: $EXP_ID"
         
-          RUN_ID=$(mlflow runs list --experiment-id $EXP_ID | awk '!/ID/ {print $1; exit}')
+          RUN_ID=$(mlflow runs list --experiment-id $EXP_ID --output json | jq -r '.[0].run_id')
           echo "RUN_ID: $RUN_ID"
         
-          if [[ -z "$RUN_ID" ]]; then
+          if [[ -z "$RUN_ID" || "$RUN_ID" == "null" ]]; then
             echo "RUN_ID tidak ditemukan"
             exit 1
           fi
         
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV        
 
       - name: 8. Commit MLflow Artifacts to Repo
         uses: stefanzweifel/git-auto-commit-action@v5
