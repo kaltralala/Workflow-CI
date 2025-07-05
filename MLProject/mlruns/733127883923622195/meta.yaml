@@ -1,6 +1,0 @@
-artifact_location: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/733127883923622195
-creation_time: 1751715866848
-experiment_id: '733127883923622195'
-last_update_time: 1751715866848
-lifecycle_stage: active
-name: Automated CI Training
