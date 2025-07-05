@@ -66,6 +66,6 @@ jobs:
           echo "Pushing Docker image..."
           docker push "$IMAGE_NAME"
 
-      - name: 8. Optional: Confirm Docker Push
+      - name: 8. Confirm Docker Push
         run: |
           echo "Image pushed to Docker Hub: ${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
