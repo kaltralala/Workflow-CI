@@ -17,6 +17,8 @@ def train_model(data_path):
     Fungsi utama untuk melatih model RandomForest dan menggunakan autolog.
     Menerima path data sebagai argumen untuk fleksibilitas.
     """
+
+    mlflow.sklearn.autolog()
     
     # Mengatur nama eksperimen di MLflow.
     # Semua 'run' dari workflow ini akan dikelompokkan di sini.
@@ -30,12 +32,6 @@ def train_model(data_path):
     except FileNotFoundError as e:
         print(f"Error memuat data: {e}. Pastikan path '{data_path}' benar.")
         return
-
-    # ✅ HAPUS start_run(), karena sudah dijalankan otomatis oleh `mlflow run .`
-    # Cukup aktifkan autolog & jalankan training
-
-    # Mengaktifkan autologging untuk scikit-learn.
-    mlflow.sklearn.autolog()
     
     print("Memulai pelatihan model RandomForest...")
 
