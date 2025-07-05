@@ -1,9 +1,8 @@
-name: Advanced CI, Training, and Docker Deployment
+name: CI - Train, Commit Artifacts & Build Docker Image
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -16,82 +15,53 @@ jobs:
       MLFLOW_CONDA_HOME: /usr/share/miniconda
 
     steps:
-      - name: 1. Checkout Repository (with Git LFS)
+      - name: Checkout repository with LFS
         uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: 2. Set up Git LFS
-        run: |
-          git lfs install
-          git lfs pull
+      - name: Pull Git LFS files
+        run: git lfs pull
 
-      - name: 3. Set up Miniconda
+      - name: Set up Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          auto-update-conda: true
           python-version: 3.12
+          auto-update-conda: true
 
-      - name: 4. Install Python Dependencies
+      - name: Install Python dependencies
         shell: bash -l {0}
-        run: |
-          pip install mlflow==2.19.0 scikit-learn pandas seaborn matplotlib
+        run: pip install mlflow scikit-learn pandas
 
-      - name: 5. Clean up old mlruns (optional)
-        run: rm -rf ./MLProject/mlruns
-
-      - name: 6. Run MLflow Project (Training)
-        id: training
+      - name: Train model with MLflow & capture run ID
+        id: train
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          mlflow run . --experiment-name "Automated CI Training"
-          ls -R mlruns/
+          mlflow run . --experiment-name "Automated CI Training" | tee run.log
+          RUN_ID=$(grep -oE "run with ID '([a-f0-9\-]+)'" run.log | awk -F"'" '{print $2}')
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "Captured RUN_ID: $RUN_ID"
 
-      - name: Debug MLflow Run Output
-        shell: bash -l {0}
-        working-directory: ./MLProject
-        run: |
-          EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
-          echo "EXP_ID: $EXP_ID"
-        
-          echo "Menampilkan semua run untuk EXP_ID $EXP_ID:"
-          mlflow runs list --experiment-id "$EXP_ID"
-
-      - name: 7. Extract Latest MLflow Run ID using CLI
-        id: get_run_id
-        shell: bash -l {0}
-        working-directory: ./MLProject
-        run: |
-          EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
-          echo "EXP_ID: $EXP_ID"
-        
-          RUN_ID=$(mlflow runs list --experiment-id "$EXP_ID" | awk 'NR>2 && $1 !~ /^-+$/ {print $5; exit}')
-        
-          if [[ -z "$RUN_ID" || "$RUN_ID" == "null" ]]; then
-            echo "RUN_ID tidak ditemukan"
-            exit 1
-          fi
-        
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV        
-
-      - name: 8. Commit MLflow Artifacts to Repo
+      - name: Commit MLflow artifacts
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "ci: Update mlruns artifacts after training"
+          commit_message: "ci: Update MLflow artifacts"
           file_pattern: 'MLProject/mlruns/'
 
-      - name: 9. Log in to Docker Hub
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 10. Build & Push Docker Image
+      - name: Build & push Docker image
         shell: bash -l {0}
+        working-directory: ./MLProject
         run: |
           IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
-          echo "Building Docker image: $IMAGE_NAME"
-          mlflow models build-docker --model-uri "runs:/${{ env.RUN_ID }}/model" --name "$IMAGE_NAME"
-          --tracking-uri "file:./mlruns"
+          echo "Building image: $IMAGE_NAME"
+          mlflow models build-docker \
+            --model-uri "runs:/${{ env.RUN_ID }}/model" \
+            --name "$IMAGE_NAME"
           docker push "$IMAGE_NAME"
