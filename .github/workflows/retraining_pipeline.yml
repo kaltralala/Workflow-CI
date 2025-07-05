@@ -45,6 +45,9 @@ jobs:
           export MLFLOW_CONDA_HOME=/usr/share/miniconda
           mlflow run .
 
+      - name: List mlruns output
+        run: ls -R ./MLProject/mlruns
+          
       - name: Upload trained model to GitHub
         uses: actions/upload-artifact@v4
         with:
