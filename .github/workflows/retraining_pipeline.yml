@@ -42,7 +42,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          export MLFLOW_CONDA_HOME=$CONDA/bin
+          export MLFLOW_CONDA_HOME=/usr/share/miniconda
           mlflow run .
 
       - name: Upload trained model to GitHub
