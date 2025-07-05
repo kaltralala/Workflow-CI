@@ -20,6 +20,9 @@ jobs:
           auto-update-conda: true
           python-version: 3.12
 
+      - name: Install MLflow
+        run: pip install mlflow==2.19.0
+
       - name: Run MLflow Project
         working-directory: ./MLProject
         run: mlflow run .
