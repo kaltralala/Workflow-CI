@@ -58,24 +58,23 @@ jobs:
           echo "Menampilkan semua run untuk EXP_ID $EXP_ID:"
           mlflow runs list --experiment-id "$EXP_ID"
 
-      - name: 7. Extract Latest MLflow Run ID (safe awk parsing)
+      - name: 7. Extract Latest MLflow Run ID using CLI
         id: get_run_id
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          EXP_ID=$(mlflow experiments search | awk '$0 ~ /Automated CI Training/ {print $1}')
+          EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
           echo "EXP_ID: $EXP_ID"
         
-          RUN_ID=$(mlflow runs list --experiment-id "$EXP_ID" | awk 'NF > 1 && $1 !~ /^-+$/ && $1 != "Run" {print $1; exit}')
+          RUN_ID=$(mlflow runs list --experiment-id "$EXP_ID" | awk 'NR>2 && $1 !~ /^-+$/ {print $3; exit}')
           echo "RUN_ID: $RUN_ID"
         
-          if [[ -z "$RUN_ID" || "$RUN_ID" == "-----------------------" ]]; then
-            echo "RUN_ID tidak valid"
+          if [[ -z "$RUN_ID" || "$RUN_ID" == "null" ]]; then
+            echo "RUN_ID tidak ditemukan"
             exit 1
           fi
         
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-              
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV        
 
       - name: 8. Commit MLflow Artifacts to Repo
         uses: stefanzweifel/git-auto-commit-action@v5
