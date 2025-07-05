@@ -31,45 +31,36 @@ def train_model(data_path):
         print(f"Error memuat data: {e}. Pastikan path '{data_path}' benar.")
         return
 
-    # Memulai sesi logging MLflow.
-    with mlflow.start_run(run_name="Automated_RF_Training"):
-        
-        # Mengaktifkan autologging untuk scikit-learn.
-        # Ini akan secara otomatis mencatat parameter, metrik, dan artefak model.
-        mlflow.sklearn.autolog()
-        
-        print("Memulai pelatihan model RandomForest...")
-        # Inisialisasi model "juara" kita dari Kriteria 2.
-        model = RandomForestClassifier(
-            n_estimators=100,
-            class_weight='balanced',
-            random_state=42,
-            n_jobs=-1
-        )
-        
-        # Melatih model
-        model.fit(X_train, y_train.values.ravel())
-        
-        print("Pelatihan model selesai.")
-        print("Parameter, metrik, dan model telah dicatat secara otomatis oleh MLflow.")
+    # ✅ HAPUS start_run(), karena sudah dijalankan otomatis oleh `mlflow run .`
+    # Cukup aktifkan autolog & jalankan training
+
+    # Mengaktifkan autologging untuk scikit-learn.
+    mlflow.sklearn.autolog()
+    
+    print("Memulai pelatihan model RandomForest...")
+
+    # Inisialisasi model RandomForest
+    model = RandomForestClassifier(
+        n_estimators=100,
+        class_weight='balanced',
+        random_state=42,
+        n_jobs=-1
+    )
+    
+    # Melatih model
+    model.fit(X_train, y_train.values.ravel())
+    
+    print("Pelatihan model selesai.")
+    print("Parameter, metrik, dan model telah dicatat secara otomatis oleh MLflow.")
 
 # BLOK EKSEKUSI UTAMA
 if __name__ == "__main__":
-    # Bagian ini membuat skrip kita bisa menerima argumen dari luar.
-    
-    # Membuat parser
     parser = argparse.ArgumentParser(description="Script pelatihan model untuk MLflow Project.")
-    
-    # Mendefinisikan argumen yang kita harapkan, yaitu --data_path.
-    # Ini harus cocok dengan parameter yang kita definisikan di file MLProject.
     parser.add_argument(
         "--data_path",
         type=str,
         required=True,
         help="MLProject/hasil_preprocessing/"
     )
-    
     args = parser.parse_args()
-    
-    # Memanggil fungsi pelatihan utama dengan path data yang diterima dari argumen.
     train_model(args.data_path)
