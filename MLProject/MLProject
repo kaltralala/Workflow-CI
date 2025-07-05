@@ -9,9 +9,4 @@ entry_points:
       train_labels: {type: str, default: "hasil_preprocessing/train_labels.csv"}
       test_features: {type: str, default: "hasil_preprocessing/test_features.csv"}
       test_labels: {type: str, default: "hasil_preprocessing/test_labels.csv"}
-    command: >
-      python modelling.py
-        --train_features {train_features}
-        --train_labels {train_labels}
-        --test_features {test_features}
-        --test_labels {test_labels}
+    command: "python modelling.py --train_features {train_features} --train_labels {train_labels} --test_features {test_features} --test_labels {test_labels}"
