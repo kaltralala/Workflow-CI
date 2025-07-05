@@ -10,12 +10,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 def load_data(path):
-    """Memuat data dari file CSV."""
     return pd.read_csv(path)
 
 def train_model(data_path):
-    """Melatih model RandomForest dan mencatat hasilnya secara manual ke MLflow."""
-    
     mlflow.set_experiment("Automated CI Training")
 
     print("Memuat data dari:", data_path)
@@ -24,54 +21,48 @@ def train_model(data_path):
     X_test = load_data(os.path.join(data_path, 'test_features.csv'))
     y_test = load_data(os.path.join(data_path, 'test_labels.csv')).values.ravel()
     
-    with mlflow.start_run(run_name="Automated_RF_ManualLog"):
-        
-        # Inisialisasi dan latih model
-        print("Melatih model RandomForest...")
-        params = {
-            'n_estimators': 100,
-            'class_weight': 'balanced',
-            'random_state': 42,
-            'n_jobs': -1
-        }
-        model = RandomForestClassifier(**params)
-        model.fit(X_train, y_train)
-        print("Model selesai dilatih.")
+    # Cek apakah run sudah aktif (karena dipanggil dari `mlflow run .`)
+    if mlflow.active_run() is None:
+        mlflow.start_run(run_name="Automated_RF_ManualLog")
 
-        # Evaluasi model
-        print("Evaluasi model pada data uji...")
-        y_pred_test = model.predict(X_test)
-        y_pred_proba_test = model.predict_proba(X_test)[:, 1]
+    print("Melatih model RandomForest...")
+    params = {
+        'n_estimators': 100,
+        'class_weight': 'balanced',
+        'random_state': 42,
+        'n_jobs': -1
+    }
+    model = RandomForestClassifier(**params)
+    model.fit(X_train, y_train)
+    print("Model selesai dilatih.")
 
-        # Logging manual ke MLflow
-        print("Logging parameter dan metrik ke MLflow...")
-        mlflow.log_params(params)
-        mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred_test))
-        mlflow.log_metric("test_precision", precision_score(y_test, y_pred_test))
-        mlflow.log_metric("test_recall", recall_score(y_test, y_pred_test))
-        mlflow.log_metric("test_f1_score", f1_score(y_test, y_pred_test))
-        mlflow.log_metric("test_roc_auc", roc_auc_score(y_test, y_pred_proba_test))
+    print("Evaluasi model pada data uji...")
+    y_pred_test = model.predict(X_test)
+    y_pred_proba_test = model.predict_proba(X_test)[:, 1]
 
-        # Simpan model ke MLflow
-        mlflow.sklearn.log_model(model, "model")
+    print("Logging parameter dan metrik ke MLflow...")
+    mlflow.log_params(params)
+    mlflow.log_metric("test_accuracy", accuracy_score(y_test, y_pred_test))
+    mlflow.log_metric("test_precision", precision_score(y_test, y_pred_test))
+    mlflow.log_metric("test_recall", recall_score(y_test, y_pred_test))
+    mlflow.log_metric("test_f1_score", f1_score(y_test, y_pred_test))
+    mlflow.log_metric("test_roc_auc", roc_auc_score(y_test, y_pred_proba_test))
 
-        # Hitung confusion matrix
-        cm = confusion_matrix(y_test, y_pred_test)
+    mlflow.sklearn.log_model(model, "model")
 
-        # Plot confusion matrix
-        plt.figure(figsize=(6, 5))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
-        plt.xlabel("Predicted")
-        plt.ylabel("Actual")
-        plt.title("Confusion Matrix (Test Data)")
+    cm = confusion_matrix(y_test, y_pred_test)
+    plt.figure(figsize=(6, 5))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+    plt.xlabel("Predicted")
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix (Test Data)")
 
-        # Simpan dan log gambar ke MLflow
-        conf_matrix_path = "training_confusion_matrix.png"
-        plt.savefig(conf_matrix_path)
-        mlflow.log_artifact(conf_matrix_path)
-        plt.close()
+    conf_matrix_path = "training_confusion_matrix.png"
+    plt.savefig(conf_matrix_path)
+    mlflow.log_artifact(conf_matrix_path)
+    plt.close()
 
-        print("Logging selesai.")
+    print("Logging selesai.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
