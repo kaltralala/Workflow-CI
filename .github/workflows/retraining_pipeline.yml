@@ -32,4 +32,5 @@ jobs:
       - name: Run MLflow Project
         # 'working-directory' memastikan perintah dijalankan dari dalam folder MLProject
         working-directory: ./MLProject
+        shell: bash -l {0}
         run: mlflow run .
