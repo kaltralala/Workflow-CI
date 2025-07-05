@@ -21,7 +21,7 @@ def train_model(data_path):
     X_test = load_data(os.path.join(data_path, 'test_features.csv'))
     y_test = load_data(os.path.join(data_path, 'test_labels.csv')).values.ravel()
 
-    with mlflow.start_run(run_name="Automated_RF_ManualLog"):  # <= no nested=True
+    with mlflow.start_run(run_name="Automated_RF_ManualLog", nested=True):
         print("Melatih model RandomForest...")
         params = {
             'n_estimators': 100,
