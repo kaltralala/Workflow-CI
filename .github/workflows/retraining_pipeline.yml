@@ -66,7 +66,7 @@ jobs:
           EXP_ID=$(mlflow experiments search | awk -F ' +' '$0 ~ /Automated CI Training/ {print $1}')
           echo "EXP_ID: $EXP_ID"
         
-          RUN_ID=$(mlflow runs list --experiment-id "$EXP_ID" | awk 'NR>2 && $1 !~ /^-+$/ {print $3; exit}')
+          RUN_ID=$(mlflow runs list --experiment-id "$EXP_ID" | awk 'NR>2 && $1 !~ /^-+$/ {print $5; exit}')
         
           if [[ -z "$RUN_ID" || "$RUN_ID" == "null" ]]; then
             echo "RUN_ID tidak ditemukan"
