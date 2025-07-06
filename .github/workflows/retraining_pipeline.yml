@@ -32,6 +32,9 @@ jobs:
           environment-file: MLProject/conda.yaml
           activate-environment: fraud_detection_env
 
+      - name: Set DagsHub Token
+        run: echo "DAGSHUB_TOKEN=${{ secrets.DAGSHUB_TOKEN }}" >> $GITHUB_ENV
+
       - name: 4. Run MLflow Project and Get Run ID
         id: training_run
         shell: bash -l {0}
