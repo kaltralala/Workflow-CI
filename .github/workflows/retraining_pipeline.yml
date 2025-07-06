@@ -64,20 +64,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 7. Build dan push Docker image dari model
-      - name: 7. Build and Push Docker Image
+      - name: Build and Push Docker Image
         working-directory: ./MLProject
         shell: bash -l {0}
         env:
           MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
         run: |
-          IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
-          echo "Building Docker image: $IMAGE_NAME"
+          echo "RUN_ID is: $RUN_ID"
           mlflow models build-docker \
             --model-uri "runs:/${{ env.RUN_ID }}/model" \
             --name "$IMAGE_NAME"
-          echo "Pushing Docker image..."
-          docker push "$IMAGE_NAME"
+        
 
       # 8. Konfirmasi push berhasil
       - name: 8. Confirm Docker Push
