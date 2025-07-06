@@ -46,14 +46,23 @@ jobs:
         working-directory: ./MLProject
         run: mlflow run . --experiment-name "Automated CI Training"
 
-      - name: Get latest MLflow run_id
+      - name: Get Latest MLflow Run ID
         id: get_run_id
         shell: bash -l {0}
         working-directory: ./MLProject
         run: |
-          # Metode paling andal: baca langsung dari file metadata terbaru
-          LATEST_RUN_ID=$(cat $(ls -t mlruns/0/*/meta.yaml | head -n 1) | grep "run_id:" | awk '{print $2}')
+          LATEST_META_FILE=$(find mlruns -name "meta.yaml" -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f2-)
+
+          if [[ -z "$LATEST_META_FILE" ]]; then
+            echo "Error: Tidak dapat menemukan file meta.yaml di dalam direktori mlruns."
+            ls -R mlruns # Cetak isi mlruns untuk debugging
+            exit 1
+          fi
+
+          LATEST_RUN_ID=$(grep "run_id:" "$LATEST_META_FILE" | awk '{print $2}')
+          
           echo "Discovered MLflow Run ID: $LATEST_RUN_ID"
+          
           echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
 
       - name: Commit to GitHub Repo
