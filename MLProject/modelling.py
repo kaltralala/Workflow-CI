@@ -32,7 +32,7 @@ def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_p
     y_test = load_data(test_label_path).values.ravel()
 
     # Mulai tracking eksperimen
-    with mlflow.start_run(run_name="RandomForest_Champion_FinalReport", nested=True):
+    with mlflow.start_run(run_name="RandomForest_Champion_FinalReport"):
         print("Melatih model RandomForest...")
 
         params = {
