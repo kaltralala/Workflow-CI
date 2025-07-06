@@ -40,7 +40,7 @@ jobs:
         shell: bash -l {0}
         working-directory: ./MLProject
         env:
-          MLFLOW_TRACKING_URI: file://$(pwd)/mlruns
+          MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
         run: |
           echo "Running MLflow training..."
           mlflow run . --experiment-name "Automated CI Training" | tee run_output.txt
@@ -69,7 +69,7 @@ jobs:
         working-directory: ./MLProject
         shell: bash -l {0}
         env:
-          MLFLOW_TRACKING_URI: file://$(pwd)/mlruns
+          MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
         run: |
           IMAGE_NAME="${{ secrets.DOCKERHUB_USERNAME }}/fraud-detection-model:latest"
           echo "Building Docker image: $IMAGE_NAME"

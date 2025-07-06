@@ -21,7 +21,8 @@ def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_p
     print("Melacak eksperimen dengan MLflow (lokal)...")
 
     # Konfigurasi tracking lokal (bisa diganti ke folder permanen di proyek)
-    mlflow.set_tracking_uri("file:///tmp/mlruns")
+    tracking_dir = os.path.abspath("mlruns")
+    mlflow.set_tracking_uri(f"file://{tracking_dir}")
     mlflow.set_experiment("Fraud Detection - Champion Model")
 
     # Memuat data
