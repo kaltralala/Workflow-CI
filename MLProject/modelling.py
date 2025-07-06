@@ -21,6 +21,10 @@ def load_data(path):
 def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_path, test_label_path):
     # Inisialisasi koneksi ke DagsHub
     print("Menginisialisasi koneksi ke DagsHub...")
+    dagshub_token = os.getenv("DAGSHUB_TOKEN")
+    if dagshub_token:
+        dagshub.auth.add_app_token(dagshub_token)
+
     dagshub.init(repo_owner='kaltralala', repo_name='Eksperimen_SML_HMR', mlflow=True)
     mlflow.set_experiment("Fraud Detection - Champion Model")
     print("Koneksi ke DagsHub berhasil.")
