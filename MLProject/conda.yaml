@@ -12,4 +12,3 @@ dependencies:
   - jq
   - pip:
       - mlflow==2.20.0
-      - dagshub==0.3.16

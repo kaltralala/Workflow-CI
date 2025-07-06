@@ -3,7 +3,6 @@ import pandas as pd
 import mlflow
 import mlflow.sklearn
 import os
-import dagshub
 import matplotlib.pyplot as plt
 import seaborn as sns
 import argparse
@@ -19,15 +18,11 @@ def load_data(path):
 
 # FUNGSI UTAMA
 def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_path, test_label_path):
-    # Inisialisasi koneksi ke DagsHub
-    print("Menginisialisasi koneksi ke DagsHub...")
-    dagshub_token = os.getenv("DAGSHUB_TOKEN")
-    if dagshub_token:
-        dagshub.auth.add_app_token(dagshub_token)
+    print("Melacak eksperimen dengan MLflow (lokal)...")
 
-    dagshub.init(repo_owner='kaltralala', repo_name='Eksperimen_SML_HMR', mlflow=True)
+    # Konfigurasi tracking lokal (bisa diganti ke folder permanen di proyek)
+    mlflow.set_tracking_uri("file:///tmp/mlruns")
     mlflow.set_experiment("Fraud Detection - Champion Model")
-    print("Koneksi ke DagsHub berhasil.")
 
     # Memuat data
     print("Memuat data...")
@@ -85,8 +80,12 @@ def train_advanced_champion_model(train_feat_path, train_label_path, test_feat_p
         mlflow.sklearn.save_model(sk_model=model, path=local_model_path)
         mlflow.sklearn.log_model(sk_model=model, artifact_path="model")
 
+        # Simpan path model untuk workflow (opsional)
+        with open("model_path.txt", "w") as f:
+            f.write(local_model_path)
+
         print("\n" + "="*60)
-        print("Run selesai! Artefak & metrik telah dicatat ke DagsHub.")
+        print("Run selesai! Artefak & metrik telah dicatat (lokal).")
         print("="*60)
 
 # EKSEKUSI UTAMA
