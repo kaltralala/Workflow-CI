@@ -101,3 +101,6 @@ if __name__ == "__main__":
         args.test_features,
         args.test_labels
     )
+
+    import sys
+    sys.exit(0)
