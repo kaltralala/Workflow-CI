@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/766711242802411805/32bf58abd33140329a40e583b9d5e7f4/artifacts
+end_time: 1751772288314
+entry_point_name: ''
+experiment_id: '766711242802411805'
+lifecycle_stage: active
+run_id: 32bf58abd33140329a40e583b9d5e7f4
+run_name: adaptable-finch-948
+run_uuid: 32bf58abd33140329a40e583b9d5e7f4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751772288260
+status: 3
+tags: []
+user_id: runner
