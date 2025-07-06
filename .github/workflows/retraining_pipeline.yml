@@ -87,7 +87,6 @@ jobs:
           # Membangun dan Mendorong Image
           mlflow models build-docker \
             --name "$IMAGE_NAME" \
-            --tracking-uri "$TRACKING_URI"
           
           echo "Pushing Docker image: $IMAGE_NAME"
           docker push "$IMAGE_NAME"
