@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/766711242802411805/b890785d55a345cda7770d0efe359099/artifacts
+end_time: 1751772758414
+entry_point_name: ''
+experiment_id: '766711242802411805'
+lifecycle_stage: active
+run_id: b890785d55a345cda7770d0efe359099
+run_name: selective-ape-997
+run_uuid: b890785d55a345cda7770d0efe359099
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751772758358
+status: 3
+tags: []
+user_id: runner

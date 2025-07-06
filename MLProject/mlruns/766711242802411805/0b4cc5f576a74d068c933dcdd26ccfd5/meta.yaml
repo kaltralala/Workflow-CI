@@ -1,0 +1,15 @@
+artifact_uri: file:///home/runner/work/Workflow-CI/Workflow-CI/MLProject/mlruns/766711242802411805/0b4cc5f576a74d068c933dcdd26ccfd5/artifacts
+end_time: 1751772758937
+entry_point_name: ''
+experiment_id: '766711242802411805'
+lifecycle_stage: active
+run_id: 0b4cc5f576a74d068c933dcdd26ccfd5
+run_name: polite-bass-729
+run_uuid: 0b4cc5f576a74d068c933dcdd26ccfd5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1751772676408
+status: 3
+tags: []
+user_id: runner
